@@ -119,11 +119,10 @@ bool q_delete_mid(struct list_head *head)
         return false;
     struct list_head *rabbit = head->next, *turtle = head->next;
 
-    while (rabbit->next != head && rabbit->next->next != head) {
+    while (rabbit != head && rabbit->next != head) {
         rabbit = rabbit->next->next;
         turtle = turtle->next;
     }
-    turtle = turtle->next;
     list_del(turtle);
 
     return true;
