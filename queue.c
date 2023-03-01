@@ -23,7 +23,25 @@ struct list_head *q_new()
 }
 
 /* Free all storage used by queue */
-void q_free(struct list_head *l) {}
+void q_free(struct list_head *l)
+{
+    if (!l)
+        return;
+
+    struct list_head *curr = l->next;
+
+    while (curr != l) {
+        element_t *del = list_entry(curr, element_t, list);
+        // if (!del)
+        //     return;
+        curr = curr->next;
+        list_del(&del->list);
+        // free(del);
+        q_release_element(del);
+    }
+
+    free(l);
+}
 
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
