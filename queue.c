@@ -150,6 +150,9 @@ bool q_delete_mid(struct list_head *head)
 bool q_delete_dup(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
+    if (!head || list_empty(head) || list_is_singular(head))
+        return false;
+
     return true;
 }
 
@@ -257,6 +260,7 @@ void q_sort(struct list_head *head)
 int q_descend(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
+
     return 0;
 }
 
@@ -264,6 +268,28 @@ int q_descend(struct list_head *head)
 int q_merge(struct list_head *head)
 {
     // https://leetcode.com/problems/merge-k-sorted-lists/
+    if (!head || list_empty(head))
+        return 0;
+
+    queue_contex_t *entry = list_entry(head, queue_contex_t, chain);
+    queue_contex_t *c_next = entry->chain.next;
+    struct list_head *q_head = c_next->q;
+
+    while (c_next != head) {
+        // struct list_head *q_curr = q_head->next;
+
+        // while (q_curr->next != q_head)
+        // {
+        //     struct list_head *q_next = q_curr->next;
+        //     list_move_tail(q_curr,entry->q);
+        //     q_curr = q_next;
+        // }
+        list_splice_tail(q_head, entry->q);
+        c_next = c_next->chain.next;
+    }
+    q_sort(q_head);
+    int size = q_size(q_head);
+    return size;
 
     return 0;
 }
