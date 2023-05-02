@@ -1,8 +1,8 @@
+#include "queue.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "queue.h"
 
 /* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
  * but some of them cannot occur. You can suppress them by adding the
@@ -263,33 +263,56 @@ int q_descend(struct list_head *head)
 
     return 0;
 }
+/* Merge the two lists in a one sorted list. */
+struct list_head *mergeTwoLists(struct list_head *L1, struct list_head *L2)
+{
+    struct list_head *head = NULL, **ptr = &head;
+
+    for (struct list_head **node = NULL; L1 && L2; *node = (*node)->next) {
+        element_t *L1_entry = list_entry(L1, element_t, list);
+        element_t *L2_entry = list_entry(L2, element_t, list);
+        // node = (L1_entry->value < L2_entry->value) ? &L1 : &L2;
+        node = strcmp(L1_entry->value, L2_entry->value) < 0 ? &L1 : &L2;
+        *ptr = *node;
+        ptr = &(*ptr)->next;
+    }
+    *ptr = (struct list_head *) ((uintptr_t) L1 | (uintptr_t) L2);
+    return head;
+}
+
+void restructure_list(struct list_head *head)
+{
+    struct list_head *curr = head, *next = curr->next;
+    while (next) {
+        next->prev = curr;
+        curr = next;
+        next = next->next;
+    }
+    curr->next = head;
+    head->prev = curr;
+}
+
 
 /* Merge all the queues into one sorted queue, which is in ascending order */
 int q_merge(struct list_head *head)
 {
-    // https://leetcode.com/problems/merge-k-sorted-lists/
+    // // https://leetcode.com/problems/merge-k-sorted-lists/
     if (!head || list_empty(head))
         return 0;
 
-    queue_contex_t *entry = list_entry(head, queue_contex_t, chain);
-    queue_contex_t *c_next = entry->chain.next;
-    struct list_head *q_head = c_next->q;
-
-    while (c_next != head) {
-        // struct list_head *q_curr = q_head->next;
-
-        // while (q_curr->next != q_head)
-        // {
-        //     struct list_head *q_next = q_curr->next;
-        //     list_move_tail(q_curr,entry->q);
-        //     q_curr = q_next;
-        // }
-        list_splice_tail(q_head, entry->q);
-        c_next = c_next->chain.next;
+    struct list_head *merged_list = NULL;
+    queue_contex_t *group_list = NULL;
+    list_for_each_entry (group_list, head, chain) {
+        // cut the circular linked list to be doubly linked list
+        group_list->q->prev->next = NULL;
+        merged_list = mergeTwoLists(merged_list, group_list->q->next);
+        group_list->q->next = group_list->q;
     }
-    q_sort(q_head);
-    int size = q_size(q_head);
-    return size;
 
-    return 0;
+    group_list = list_entry(head->next, queue_contex_t, chain);
+    group_list->q->next = merged_list;
+
+    /* restructure the doubly-linked list */
+    restructure_list(group_list->q);
+    return q_size(group_list->q);
 }
